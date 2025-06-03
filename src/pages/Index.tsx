@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ModuleForm, ReleaseData } from "@/components/ModuleForm";
@@ -206,24 +205,7 @@ const Index = () => {
           <CreateModuleForm onCreateModule={handleCreateModule} />
         )}
         
-        {defaultModules.includes(activeSection) && (
-          <div className="space-y-6">
-            <FilterBar
-              modules={allModules}
-              selectedModule={filterModule}
-              onModuleChange={setFilterModule}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onClearFilters={() => {
-                setFilterModule("all");
-                setSearchTerm("");
-              }}
-            />
-            {renderModuleSection(activeSection)}
-          </div>
-        )}
-
-        {customModules.some(m => m.name === activeSection) && (
+        {(defaultModules.includes(activeSection) || customModules.some(m => m.name === activeSection)) && (
           <div className="space-y-6">
             <FilterBar
               modules={allModules}
