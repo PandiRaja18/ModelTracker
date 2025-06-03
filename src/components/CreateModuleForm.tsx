@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X } from "lucide-react";
+import { CustomFieldEditor } from "./CustomFieldEditor";
 
 interface CustomModule {
   id: string;
@@ -36,8 +36,6 @@ export function CreateModuleForm({ onCreateModule }: CreateModuleFormProps) {
     name: "",
     description: "",
   });
-  const [customFields, setCustomFields] = useState<string[]>([]);
-  const [newField, setNewField] = useState("");
   const [selectedFields, setSelectedFields] = useState<string[]>(defaultFields);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,37 +50,23 @@ export function CreateModuleForm({ onCreateModule }: CreateModuleFormProps) {
       return;
     }
 
-    const allFields = [...selectedFields, ...customFields];
-    
     const newModule: CustomModule = {
       id: `custom-${Date.now()}`,
       name: formData.name,
       description: formData.description,
-      fields: allFields,
+      fields: selectedFields,
     };
 
     onCreateModule(newModule);
     
     // Reset form
     setFormData({ name: "", description: "" });
-    setCustomFields([]);
     setSelectedFields(defaultFields);
     
     toast({
       title: "Module Created",
       description: `Successfully created module: ${formData.name}`,
     });
-  };
-
-  const addCustomField = () => {
-    if (newField.trim() && !customFields.includes(newField.trim())) {
-      setCustomFields(prev => [...prev, newField.trim()]);
-      setNewField("");
-    }
-  };
-
-  const removeCustomField = (field: string) => {
-    setCustomFields(prev => prev.filter(f => f !== field));
   };
 
   const toggleDefaultField = (field: string) => {
@@ -94,102 +78,73 @@ export function CreateModuleForm({ onCreateModule }: CreateModuleFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl text-slate-800">Create Custom Module</CardTitle>
-        <p className="text-sm text-slate-600">
-          Design your own ML module with custom fields and tracking requirements.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="moduleName">Module Name *</Label>
-            <Input
-              id="moduleName"
-              placeholder="e.g., Custom Image Classification"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="moduleDescription">Description</Label>
-            <Textarea
-              id="moduleDescription"
-              placeholder="Describe what this module will track..."
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label className="text-base font-medium">Default Fields</Label>
-              <p className="text-sm text-slate-600 mb-3">
-                Select which standard fields to include in your module:
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {defaultFields.map((field) => (
-                  <label key={field} className="flex items-center space-x-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={selectedFields.includes(field)}
-                      onChange={() => toggleDefaultField(field)}
-                      className="rounded border-slate-300"
-                    />
-                    <span>{field}</span>
-                  </label>
-                ))}
-              </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl text-slate-800">Create Custom Module</CardTitle>
+          <p className="text-sm text-slate-600">
+            Design your own ML module with custom fields and tracking requirements.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="moduleName">Module Name *</Label>
+              <Input
+                id="moduleName"
+                placeholder="e.g., Custom Image Classification"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
             </div>
 
-            <div>
-              <Label className="text-base font-medium">Custom Fields</Label>
-              <p className="text-sm text-slate-600 mb-3">
-                Add additional fields specific to your module:
-              </p>
-              
-              <div className="flex gap-2 mb-3">
-                <Input
-                  placeholder="Enter custom field name"
-                  value={newField}
-                  onChange={(e) => setNewField(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomField())}
-                />
-                <Button type="button" onClick={addCustomField} size="sm">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="moduleDescription">Description</Label>
+              <Textarea
+                id="moduleDescription"
+                placeholder="Describe what this module will track..."
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
 
-              {customFields.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-700">Custom Fields:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {customFields.map((field) => (
-                      <div key={field} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                        <span>{field}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeCustomField(field)}
-                          className="hover:bg-blue-200 rounded-full p-1"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-base font-medium">Default Fields</Label>
+                <p className="text-sm text-slate-600 mb-3">
+                  Select which standard fields to include in your module:
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {defaultFields.map((field) => (
+                    <label key={field} className="flex items-center space-x-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedFields.includes(field)}
+                        onChange={() => toggleDefaultField(field)}
+                        className="rounded border-slate-300"
+                      />
+                      <span>{field}</span>
+                    </label>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          <Button type="submit" className="w-full">
-            Create Module
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <Button type="submit" className="w-full">
+              Create Module
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <CustomFieldEditor 
+        fields={selectedFields.filter(f => !defaultFields.includes(f))} 
+        onFieldsUpdate={(customFields) => {
+          const defaultSelected = selectedFields.filter(f => defaultFields.includes(f));
+          setSelectedFields([...defaultSelected, ...customFields]);
+        }}
+      />
+    </div>
   );
 }

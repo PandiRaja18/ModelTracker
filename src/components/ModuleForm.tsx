@@ -55,10 +55,20 @@ export function ModuleForm({ moduleName, onSubmit }: ModuleFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.version || !formData.description || !formData.accuracy || !formData.architecture) {
+    if (!formData.version || !formData.description) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in version and description fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Only validate model-related fields if model update is checked
+    if (formData.modelUpdate && (!formData.accuracy || !formData.architecture)) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in accuracy and architecture for model updates.",
         variant: "destructive",
       });
       return;
@@ -71,13 +81,13 @@ export function ModuleForm({ moduleName, onSubmit }: ModuleFormProps) {
       description: formData.description,
       modelUpdate: formData.modelUpdate,
       modelFileName: formData.modelFileName,
-      accuracy: parseFloat(formData.accuracy),
-      architecture: formData.architecture,
-      tp: parseInt(formData.tp) || 0,
-      tn: parseInt(formData.tn) || 0,
-      fp: parseInt(formData.fp) || 0,
-      fn: parseInt(formData.fn) || 0,
-      trainingTime: parseFloat(formData.trainingTime) || 0,
+      accuracy: formData.modelUpdate ? parseFloat(formData.accuracy) : 0,
+      architecture: formData.modelUpdate ? formData.architecture : "",
+      tp: formData.modelUpdate ? (parseInt(formData.tp) || 0) : 0,
+      tn: formData.modelUpdate ? (parseInt(formData.tn) || 0) : 0,
+      fp: formData.modelUpdate ? (parseInt(formData.fp) || 0) : 0,
+      fn: formData.modelUpdate ? (parseInt(formData.fn) || 0) : 0,
+      trainingTime: formData.modelUpdate ? (parseFloat(formData.trainingTime) || 0) : 0,
       timestamp: new Date(),
     };
 
@@ -124,21 +134,6 @@ export function ModuleForm({ moduleName, onSubmit }: ModuleFormProps) {
                 required
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="accuracy">Accuracy *</Label>
-              <Input
-                id="accuracy"
-                type="number"
-                step="0.001"
-                min="0"
-                max="1"
-                placeholder="0.95"
-                value={formData.accuracy}
-                onChange={(e) => setFormData(prev => ({ ...prev, accuracy: e.target.value }))}
-                required
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -164,96 +159,115 @@ export function ModuleForm({ moduleName, onSubmit }: ModuleFormProps) {
           </div>
 
           {formData.modelUpdate && (
-            <div className="space-y-2">
-              <Label htmlFor="modelFileName">Model File Name</Label>
-              <Input
-                id="modelFileName"
-                placeholder="model_v1.2.0.pkl"
-                value={formData.modelFileName}
-                onChange={(e) => setFormData(prev => ({ ...prev, modelFileName: e.target.value }))}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="modelFileName">Model File Name</Label>
+                <Input
+                  id="modelFileName"
+                  placeholder="model_v1.2.0.pkl"
+                  value={formData.modelFileName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, modelFileName: e.target.value }))}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="accuracy">Accuracy *</Label>
+                  <Input
+                    id="accuracy"
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    max="1"
+                    placeholder="0.95"
+                    value={formData.accuracy}
+                    onChange={(e) => setFormData(prev => ({ ...prev, accuracy: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="architecture">Architecture *</Label>
+                  <Select 
+                    value={formData.architecture} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, architecture: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select architecture" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {architectureOptions.map((arch) => (
+                        <SelectItem key={arch} value={arch}>{arch}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tp">True Positives</Label>
+                  <Input
+                    id="tp"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.tp}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tp: e.target.value }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="tn">True Negatives</Label>
+                  <Input
+                    id="tn"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.tn}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tn: e.target.value }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="fp">False Positives</Label>
+                  <Input
+                    id="fp"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.fp}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fp: e.target.value }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="fn">False Negatives</Label>
+                  <Input
+                    id="fn"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.fn}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fn: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trainingTime">Training Time per Epoch (minutes)</Label>
+                <Input
+                  id="trainingTime"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="0.5"
+                  value={formData.trainingTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, trainingTime: e.target.value }))}
+                />
+              </div>
+            </>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="architecture">Architecture *</Label>
-            <Select 
-              value={formData.architecture} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, architecture: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select architecture" />
-              </SelectTrigger>
-              <SelectContent>
-                {architectureOptions.map((arch) => (
-                  <SelectItem key={arch} value={arch}>{arch}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tp">True Positives</Label>
-              <Input
-                id="tp"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.tp}
-                onChange={(e) => setFormData(prev => ({ ...prev, tp: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="tn">True Negatives</Label>
-              <Input
-                id="tn"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.tn}
-                onChange={(e) => setFormData(prev => ({ ...prev, tn: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="fp">False Positives</Label>
-              <Input
-                id="fp"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.fp}
-                onChange={(e) => setFormData(prev => ({ ...prev, fp: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="fn">False Negatives</Label>
-              <Input
-                id="fn"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.fn}
-                onChange={(e) => setFormData(prev => ({ ...prev, fn: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="trainingTime">Training Time per Epoch (minutes)</Label>
-            <Input
-              id="trainingTime"
-              type="number"
-              step="0.1"
-              min="0"
-              placeholder="0.5"
-              value={formData.trainingTime}
-              onChange={(e) => setFormData(prev => ({ ...prev, trainingTime: e.target.value }))}
-            />
-          </div>
 
           <Button type="submit" className="w-full">
             Add Release

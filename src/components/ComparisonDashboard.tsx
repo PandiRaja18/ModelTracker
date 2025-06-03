@@ -14,22 +14,28 @@ interface ComparisonDashboardProps {
 export function ComparisonDashboard({ releases, modules }: ComparisonDashboardProps) {
   const [selectedModule, setSelectedModule] = useState<string>("");
   const [chartType, setChartType] = useState<"bar" | "line">("bar");
-  const [metricView, setMetricView] = useState<"individual" | "combined">("combined");
+  const [metricView, setMetricView] = useState<"combined" | "individual" | "single">("combined");
+  const [singleMetric, setSingleMetric] = useState<"tp" | "tn" | "fp" | "fn" | "accuracy" | "precision" | "recall">("accuracy");
 
   const filteredReleases = selectedModule 
     ? releases.filter(r => r.module === selectedModule)
     : [];
 
-  const chartData = filteredReleases.map(release => ({
-    version: release.version,
-    accuracy: (release.accuracy * 100).toFixed(1),
-    precision: release.tp + release.fp > 0 ? ((release.tp / (release.tp + release.fp)) * 100).toFixed(1) : 0,
-    recall: release.tp + release.fn > 0 ? ((release.tp / (release.tp + release.fn)) * 100).toFixed(1) : 0,
-    tp: release.tp,
-    tn: release.tn,
-    fp: release.fp,
-    fn: release.fn,
-  }));
+  const chartData = filteredReleases.map(release => {
+    const precision = release.tp + release.fp > 0 ? ((release.tp / (release.tp + release.fp)) * 100) : 0;
+    const recall = release.tp + release.fn > 0 ? ((release.tp / (release.tp + release.fn)) * 100) : 0;
+    
+    return {
+      version: release.version,
+      accuracy: (release.accuracy * 100),
+      precision: precision,
+      recall: recall,
+      tp: release.tp,
+      tn: release.tn,
+      fp: release.fp,
+      fn: release.fn,
+    };
+  });
 
   const renderChart = () => {
     if (!selectedModule || chartData.length === 0) {
@@ -77,7 +83,7 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
           </ResponsiveContainer>
         );
       }
-    } else {
+    } else if (metricView === "individual") {
       if (chartType === "bar") {
         return (
           <ResponsiveContainer width="100%" height={300}>
@@ -111,6 +117,62 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
           </ResponsiveContainer>
         );
       }
+    } else {
+      // Single metric view
+      const metricColors = {
+        tp: "#22c55e",
+        tn: "#3b82f6", 
+        fp: "#f59e0b",
+        fn: "#ef4444",
+        accuracy: "#8b5cf6",
+        precision: "#10b981",
+        recall: "#f97316"
+      };
+
+      const metricNames = {
+        tp: "True Positives",
+        tn: "True Negatives",
+        fp: "False Positives", 
+        fn: "False Negatives",
+        accuracy: "Accuracy %",
+        precision: "Precision %",
+        recall: "Recall %"
+      };
+
+      if (chartType === "bar") {
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart {...commonProps}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="version" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey={singleMetric} fill={metricColors[singleMetric]} name={metricNames[singleMetric]} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      } else {
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart {...commonProps}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="version" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey={singleMetric} 
+                stroke={metricColors[singleMetric]} 
+                name={metricNames[singleMetric]} 
+                strokeWidth={3}
+                dot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      }
     }
   };
 
@@ -121,7 +183,7 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
           <CardTitle className="text-xl text-slate-800">Comparison Dashboard</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Module</label>
               <Select value={selectedModule} onValueChange={setSelectedModule}>
@@ -151,16 +213,37 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Metric View</label>
-              <Select value={metricView} onValueChange={(value: "individual" | "combined") => setMetricView(value)}>
+              <Select value={metricView} onValueChange={(value: "combined" | "individual" | "single") => setMetricView(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="combined">Performance Metrics</SelectItem>
                   <SelectItem value="individual">Confusion Matrix</SelectItem>
+                  <SelectItem value="single">Single Metric</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {metricView === "single" && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Single Metric</label>
+                <Select value={singleMetric} onValueChange={(value: typeof singleMetric) => setSingleMetric(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="accuracy">Accuracy</SelectItem>
+                    <SelectItem value="precision">Precision</SelectItem>
+                    <SelectItem value="recall">Recall</SelectItem>
+                    <SelectItem value="tp">True Positives</SelectItem>
+                    <SelectItem value="tn">True Negatives</SelectItem>
+                    <SelectItem value="fp">False Positives</SelectItem>
+                    <SelectItem value="fn">False Negatives</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="flex items-end">
               <Button 
@@ -169,6 +252,7 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
                   setSelectedModule("");
                   setChartType("bar");
                   setMetricView("combined");
+                  setSingleMetric("accuracy");
                 }}
                 className="w-full"
               >
@@ -192,7 +276,7 @@ export function ComparisonDashboard({ releases, modules }: ComparisonDashboardPr
               <Card className="p-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {Math.max(...chartData.map(d => parseFloat(d.accuracy)))}%
+                    {Math.max(...chartData.map(d => d.accuracy)).toFixed(1)}%
                   </div>
                   <div className="text-sm text-slate-600">Best Accuracy</div>
                 </div>

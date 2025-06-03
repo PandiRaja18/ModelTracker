@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ReleaseData } from "@/components/ModuleForm";
@@ -10,6 +9,7 @@ import { AddReleaseForm } from "@/components/AddReleaseForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, Package, Clock, Sparkles } from "lucide-react";
+import { VersionDetailsDropdown } from "@/components/VersionDetailsDropdown";
 
 const defaultModules = [
   "Email Classification",
@@ -109,16 +109,18 @@ const Index = () => {
               <div className="flex items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                  <span className="text-slate-600">Accuracy: {(latestRelease.accuracy * 100).toFixed(1)}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
                   <span className="text-slate-600">Architecture: {latestRelease.architecture}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                   <span className="text-slate-600">Released: {latestRelease.timestamp.toLocaleDateString()}</span>
                 </div>
+                {latestRelease.modelUpdate && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                    <span className="text-slate-600">Accuracy: {(latestRelease.accuracy * 100).toFixed(1)}%</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -132,9 +134,9 @@ const Index = () => {
           </h2>
           
           {moduleReleases.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {moduleReleases.map((release) => (
-                <ReleaseCard 
+                <VersionDetailsDropdown
                   key={release.id} 
                   release={release} 
                   onUpdate={handleUpdateRelease}
