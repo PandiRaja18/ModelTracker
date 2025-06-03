@@ -20,10 +20,10 @@ interface SidebarProps {
 }
 
 const modules = [
-  { id: "email", name: "Email Classification", icon: Mail },
-  { id: "sentence", name: "Sentence Classification", icon: Type },
-  { id: "webpage", name: "Webpage Classification", icon: Globe },
-  { id: "url", name: "URL Classification", icon: Link },
+  { id: "Email Classification", name: "Email Classification", icon: Mail },
+  { id: "Sentence Classification", name: "Sentence Classification", icon: Type },
+  { id: "Webpage Classification", name: "Webpage Classification", icon: Globe },
+  { id: "URL Classification", name: "URL Classification", icon: Link },
 ];
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
