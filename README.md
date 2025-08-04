@@ -1,8 +1,4 @@
-Here’s a more tailored README for your GitHub project with actual details about your application:
-
----
-
-# Release Note and Milestone Tracker
+# Model Tracker
 
 ## Project Info
 
